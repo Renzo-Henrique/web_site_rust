@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exemplo de POST</title>
+</head>
+<body>
+    <form id="meuFormulario">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required><br>
+
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" name="senha" required><br>
+
+        <button type="button" onclick="sendLogin()">logar</button>
+    </form>
+
+    <script>
+        function sendLogin() {
+            var nome = document.getElementById('nome').value;
+            var senha = document.getElementById('senha').value;
+
+            var userData = {
+                nome: nome,
+                senha: senha
+            };
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            }).then(response => {
+                // Lida com a resposta do servidor, se necessário
+            }).catch(error => {
+                // Lida com erros, se ocorrerem
+            });
+        }
+    </script>
+</body>
+</html>
