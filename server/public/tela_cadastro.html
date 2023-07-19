@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tela de Cadastro</title>
+</head>
+
+<body>
+    <h1>Faca seu cadastro</h1>
+    <form id="loginForm">
+        <label for="username">Nome de usuario:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required><br>
+        <label for="favoritelanguage">Linguagem Favorita</label>
+        <input type ="text" id ="favoritelanguage" name ="favorite_language">
+        <button type="button" onclick="cadastro()">Fazer Cadastro</button>
+    </form>
+    <p id= "response_cadastro"></p>
+
+    <script>
+        async function cadastro() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const favorite_language= document.getElementById('favoritelanguage').value;
+
+            const cadastroData = {
+                username: username,
+                password: password,
+                favorite_language: favorite_language,
+            };
+
+           
+            const url = window.location.href; 
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(cadastroData),
+            });
+            
+            const data = await response.text();
+
+            document.getElementById("response_cadastro").innerText = data;
+            /*
+            .then(data => {
+                console.log("mano o que vai retornar aqui ? ");
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Erro ao fazer o Cadastro:', error);
+            });
+            */
+
+        }
+    </script>
+</body>
+
+</html>
