@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tela de Login</title>
+</head>
+
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <label for="username">Nome de usuário:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="button" onclick="doLogin()">Fazer login</button>
+    </form>
+
+    <script>
+        function doLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginData = {
+                username: username,
+                password: password
+            };
+
+            // Faz o post para o servidor (você precisará implementar esta parte em Rust)
+            const url = 'http://seu-servidor.com/login'; // Substitua pelo URL do servidor
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Aqui você pode tratar a resposta do servidor, caso necessário
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Erro ao fazer o login:', error);
+            });
+        }
+    </script>
+</body>
+
+</html>
