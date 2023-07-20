@@ -3,18 +3,82 @@
 
 <head>
     <title>Tela de Login</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.7), #FF8C00, #FFA500, #C76100, #8B5200);
+            font-family: Arial, sans-serif;
+        }
+
+        .login-container {
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #response_login {
+            text-align: center;
+            color: #555;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Login</h1>
-    <form id="loginForm">
-        <label for="username">Nome de usuario:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="password">Senha:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="button" onclick="doLogin()">Fazer login</button>
-    </form>
-    <p id= "response_login"></p>
+    <div class="login-container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label for="username">Nome de usuario:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="button" onclick="doLogin()">Fazer login</button>
+        </form>
+        <p id="response_login"></p>
+    </div>
+
     <script>
         async function doLogin() {
             const username = document.getElementById('username').value;
@@ -24,8 +88,7 @@
                 password: password
             };
 
-           
-            const url = window.location.href; 
+            const url = window.location.href;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -37,7 +100,7 @@
             const data = await response.text();
 
             document.getElementById("response_login").innerHTML = data;
-           
+
         }
     </script>
 </body>
