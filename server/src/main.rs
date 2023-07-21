@@ -1,3 +1,5 @@
+
+/* 
 use core::panic;
 use std::collections::HashMap;
 use std::io::prelude::*;
@@ -199,4 +201,120 @@ fn handle_connection(mut stream: TcpStream, app_state: &mut AppState) {
     stream.write(response.as_bytes()).unwrap();
     stream.flush().unwrap();
     
+}
+
+*/
+
+
+
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use serde::{Deserialize, Serialize};
+use serde_json;
+
+use std::collections::HashMap;
+use std::sync::{Mutex};
+
+
+#[derive(Debug, Deserialize, Serialize)]
+struct User{
+    username: String,
+    password: String,
+    favorite_language: String,
+}
+
+// Definição da estrutura de dados para representar os dados de login
+#[derive(Debug, Deserialize, Serialize)]
+struct LoginData{
+    username: String,
+    password: String,
+}
+
+struct AppState{
+    users: Mutex<HashMap<String, User>>
+}
+
+use std::io;
+
+
+async fn handle_connection(mut stream: TcpStream, app_state: &AppState) -> io::Result<()>{
+    // Buffer para armazenar os dados recebidos pela conexão TCP
+    let mut buffer = [0; 1024];
+    // Lê os dados recebidos pela conexão e os armazena no buffer
+
+    stream.read(&mut buffer).await;
+
+    // Verifica o tipo de requisição recebida
+    let get = b"GET";
+    let post = b"POST";
+    let mut response_content: Option<String> = None;
+
+
+    // Realiza a funcao para cada requisicao
+    if buffer.starts_with(get){
+        response_content =  get_handler(&buffer[4..], app_state);
+    }
+    else if buffer.starts_with(post){
+        response_content = post_handler(&buffer[5..], app_state);
+    }
+
+    // Com base no conteúdo retornado pelas funções 'get_handler' ou 'post_handler',
+    // constrói a resposta que será enviada de volta ao cliente
+    let response = match response_content{
+        Some(x) => {
+            // Se 'file_content' contém algum conteúdo (Some),
+            // constrói uma resposta bem-sucedida com o código 200 OK e o conteúdo retornado
+            format!("{}{}","HTTP/1.1 200 OK\r\n\r\n", x)
+        }
+        _ => {
+            // Caso contrário, se 'file_content' estiver vazio (None),
+            // constrói uma resposta com o código 404 NOT FOUND e carrega a página de erro 404.html
+            format!("{}{}", "HTTP/1.1 404 NOT FOUND\r\n\r\n", "./public/404.html")
+        }
+    };
+
+    // Escreve a resposta no buffer de saída da conexão TCP e a envia de volta ao cliente
+    stream.write(response.as_bytes()).await?;
+    stream.flush().await?;
+    Ok(())
+}
+
+
+
+async fn nao_sei(){
+    println!("aaaaaaaaaa{}", "aa");
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>>{
+
+
+    let mut app_state = AppState{
+        users: Mutex::new(HashMap::<String, User>::new())
+    };
+
+    let listener = TcpListener::bind("127.0.0.1/8080").await?;
+
+
+    loop{
+
+        match listener.accept().await{
+
+            Ok( (socket, _ ) ) =>{
+                
+                tokio::spawn( 
+                
+                    async move {
+                       handle_connection(socket, &app_state).await;
+                    }
+                
+                );
+
+            }
+            Err(e) => eprintln!("some error ocurred when listening {:?}", e ),
+        }
+    }
+
+
+
 }
