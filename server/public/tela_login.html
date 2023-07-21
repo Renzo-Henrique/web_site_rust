@@ -98,9 +98,35 @@
                 body: JSON.stringify(loginData),
             });
 
-            const data = await response.text();
+            const data = await response.json();
 
-            document.getElementById("response_login").innerHTML = data;
+      
+
+            document.getElementById("response_login").innerHTML = data.message;
+
+           
+            if (data.status == 0){
+                setTimeout(  ()=> {} ,  1)
+
+                acceptData  = {
+
+                    token : data.token
+                }
+    
+                
+                const url = window.location.href + "accept";
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(acceptData),
+                });
+
+                
+    
+            }
+            
 
         }
     </script>
