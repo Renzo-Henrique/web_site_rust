@@ -100,31 +100,31 @@
 
             const data = await response.json();
 
-      
+    
 
             document.getElementById("response_login").innerHTML = data.message;
 
            
             if (data.status == 0){
-                setTimeout(  ()=> {} ,  1)
+             
 
                 acceptData  = {
-
                     token : data.token
                 }
-    
-                
-                const url = window.location.href + "accept";
+            
+
+                const url = window.location.href + "/accept";
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Authorization': data.token,
                     },
-                    body: JSON.stringify(acceptData),
                 });
+               
+               document.body.innerHTML = await response.text()
+                
 
                 
-    
             }
             
 

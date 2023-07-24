@@ -7,17 +7,19 @@ use serde_json::json;
 use tokio::fs;
 
 use core::fmt;
-use std::collections::HashMap;
+use std::collections::{HashMap, btree_map};
 use std::hash::Hash;
 use std::sync::{Arc , Mutex};
 
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 struct User{
     username: String,
     password: String,
+    token: u64,
     favorite_language: String,
 }
+
 
 // Definição da estrutura de dados para representar os dados de login
 #[derive(Debug, Deserialize, Serialize)]
@@ -26,43 +28,110 @@ struct LoginData{
     password: String,
 }
 
-
-struct Token{
-    value: i32,
+#[derive(Debug, Deserialize, Serialize)]
+struct CadastroData{
+    username: String,
+    password: String,
+    favorite_language: String,
 }
 
 
-use sha2::{Sha256, Digest};
+struct Token{
+    value: u64,
+}
+
+
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hasher};
+
+
+
 
 impl  Token {
 
     fn new( name: &str) -> Self{
-    
-        Token { value: 1 }
+        
+        let mut hasher = DefaultHasher::new();
+        
+        name.hash( &mut hasher);
+
+        Token { value: (hasher.finish()) }
     }
 }
 struct AppState{
     users: Mutex<HashMap<String, User>>,
-    tokens: Mutex<HashMap< Token , User>>,
+    tokens: Mutex<HashMap< u64 , User>>,
 }
 
 use std::io;
-
+use handlebars::Handlebars;
+use std::collections::BTreeMap;
 
 async fn get_handler(server_path: &[u8], mut app_state: Arc<AppState>) -> Result<String, ()>{
 
     // Caminhos de URL obtidos da conexão TCP para as páginas de login, cadastro e página inicial
     let login = b"/login";
     let cadastro = b"/cadastro";
+    let user_info = b"/login/accept";
     let inital_page = b"/";
     
     // Variável para armazenar o conteúdo do arquivo HTML
     
 
     let file_path = match server_path{
+        _ if server_path.starts_with(cadastro) => {
+            "./public/tela_cadastro.html"
+        },
+        _ if server_path.starts_with(user_info) => {
+           
+            let file_content = fs::read_to_string("./public/tela_usuario.html").await.unwrap();
+
+            let content = std::str::from_utf8(server_path).unwrap();
+
+            println!("eu estoiu aqui 1");
+            let user_token = {
+
+                
+                let i = match content.find("Authorization: "){
+                    Some(index) => index,
+                    _ => return Err(()),
+                };
+
+                let ref_ = &content[(i + 15)..];
+
+                let j = match ref_.find("\r\n"){
+                    Some(index) => index,
+                    _ => return Err(()),
+                };
+              
+                let token_str = &ref_[.. j];
+                
+                token_str.parse::<u64>().unwrap()
+            };
+
+
+
+
+            let tokens = app_state.tokens.lock().unwrap();
+
+            let user = tokens.get(&user_token).unwrap();
+
+            let mut bt = BTreeMap::new();
+
+            bt.insert("username", &(user.username)[..]);
+            bt.insert("password", &(user.password)[..]);
+            bt.insert("favorite_language", &(user.favorite_language)[..]);
+            
+            let mut handle = Handlebars::new();
+
+            let result = handle.render_template(&file_content, &bt).unwrap();
+
+            return Ok(result);
+        } 
         _ if server_path.starts_with(login) => "./public/tela_login.html",
-        _ if server_path.starts_with(cadastro) => "./public/tela_cadastro.html",
-        _ if server_path.starts_with(inital_page) => "./public/tela_inicial.html",
+        _ if server_path.starts_with(inital_page) => {
+            "./public/tela_inicial.html"
+        },
         _ => return Err(()),
     };
 
@@ -122,16 +191,27 @@ async fn post_handler(html_content: &[u8], mut app_state: Arc<AppState>) -> Resu
    
     if html_content.starts_with(cadastro){
         
-        let new_user: User = to_json(html_content).unwrap();
+        let data: CadastroData = to_json(html_content).unwrap();
+
+        let new_token = Token::new(&data.username);
+
+        let new_user: User = User{
+            username: data.username,
+            password: data.password,
+            favorite_language: data.favorite_language,
+            token: new_token.value,
+        };
 
         // Bloqueia o Mutex para acessar o HashMap de usuários de forma segura
         let mut users = &mut app_state.users.lock().unwrap();
-
+        let mut tokens = &mut app_state.tokens.lock().unwrap();
         // Verifica a validacao da criacao de um usuario, insere na hashmap se for novo
         if let Some(user) = users.get(&new_user.username){
             return Ok("Usuário já existente👺".to_string());
         }else {
-            users.insert(new_user.username.clone(), new_user);
+            let hold = new_user;
+            users.insert(hold.username.clone(), hold.clone());
+            tokens.insert(new_token.value, hold.clone());
             return Ok("Cadastro feito com sucesso 🧙‍♂️☄️".to_string());
         }
     }
@@ -155,7 +235,7 @@ async fn post_handler(html_content: &[u8], mut app_state: Arc<AppState>) -> Resu
                 let response = json!(
                     {
                         "message" : "Você esta logado💪",
-                        "token" : "69",
+                        "token" : user.token.to_string(),
                         "status" : "0"
                     }
                 );
@@ -230,7 +310,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     let mut app_state = AppState{
         users: Mutex::new(HashMap::<String, User>::new()),
-        tokens: Mutex::new(HashMap::<Token, User>::new()),
+        tokens: Mutex::new(HashMap::<u64, User>::new()),
     };
 
     let mut app_state = Arc::new(app_state);

@@ -64,18 +64,18 @@
 <body>
     <div class="user-container">
         <h1>Usuario</h1>
-        <p><strong>Nome de usuario:</strong> <span id="username" class="break-word"></span></p>
-        <p><strong>Senha:</strong> <span id="password"></span></p>
-        <p><strong>Linguagem Favorita:</strong> <span id="favoriteLanguage" class="break-word"></span></p>
+        <p><strong>Nome de usuario:</strong> <span id="username" class="break-word"> {{ username }}</span></p>
+        <p><strong>Senha:</strong> <span id="password">{{password}}</span></p>
+        <p><strong>Linguagem Favorita:</strong> <span id="favoriteLanguage" class="break-word">{{favorite_language}}</span></p>
         <a href="/" class="back-btn">Voltar para a página inicial</a>
     </div>
 
     <script>
         // Substitua as informações abaixo pelos dados do usuário recebidos do servidor
         const userData = {
-            username: "NomeDoUsuarioComNomeMuitoGrandeQuePodeExcederOLimiteDoConteineraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            password: "********", // Exemplo de senha ocultada por asteriscos
-            favorite_language: "LinguagemFavoritaComNomeMuitoGrandeQuePodeExcederOLimiteDoConteiner"
+            username: {{ username }},
+            password: {{password}}, // Exemplo de senha ocultada por asteriscos
+            favorite_language: {{favorite_language}}
         };
 
         // Preencha as informações do usuário na página
